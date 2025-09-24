@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Discord Timezone Viewer",
+  "version": "1.0",
+  "description": "Adds a timezone button to Discord user profiles and shows their local time.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.discord.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

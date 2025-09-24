@@ -1,0 +1,32 @@
+#timezone-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #2f3136; 
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timezone-option {
+    background-color: #36393f;
+    border: none;
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.timezone-option:hover {
+    background-color: #40444b;
+}
+
+#timezone-popup h3 {
+    color: #ffffff;
+    margin: 0 0 10px 0;
+}
