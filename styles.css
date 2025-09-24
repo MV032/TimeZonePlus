@@ -1,4 +1,9 @@
+/* Main popup container */
 #timezone-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: #2f3136;
     border-radius: 8px;
     display: flex;
@@ -6,9 +11,16 @@
     gap: 8px;
     max-height: 300px;
     overflow-y: auto;
-    padding-right: 2px;
+    padding: 20px;
+    padding-right: 2px; /* avoids overlap with scrollbar */
+    z-index: 9999;
+    color: #fff;
     font-family: Whitney, Helvetica, Arial, sans-serif;
     font-size: 14px;
+
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(101,102,113) transparent;
 }
 
 /* Chrome/Edge scrollbar */
@@ -27,12 +39,15 @@
     background-clip: padding-box;
 }
 
-/* Firefox scrollbar */
-#timezone-popup {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(101,102,113) transparent;
+/* Title */
+#timezone-popup h3 {
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+    margin: 0 0 12px 0; /* more space between title and options */
 }
 
+/* Each timezone option */
 .timezone-option {
     background-color: #36393f;
     border: none;
@@ -41,19 +56,9 @@
     border-radius: 4px;
     cursor: pointer;
     text-align: left;
-    font-family: Whitney, Helvetica, Arial, sans-serif;
-    font-size: 14px;
+    font-family: inherit;
+    font-size: inherit;
 }
 
-.timezone-option:hover {
-    background-color: rgba(49,49,54);
-    border-radius: 8px;
-}
-
-#timezone-popup h3 {
-    color: #fff;
-    margin: 0 0 10px 0;
-    font-weight: bold;
-    font-family: Whitney, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-}
+/* Hover removed from options (not used) */
+/* .timezone-option:hover { ... } */
