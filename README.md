@@ -3,7 +3,7 @@ work in the Discord app or on the web version from different browsers.
 
 Until I upload this to the Chrome Webstore you must unpack it manually to use it.
 
-Step to manually unpack:
+Steps to manually unpack:
   1) Download manifest.json, content.js, and styles.css and put them in a folder
   2) go to chrome://extensions/
   3) Enable developer mode at the top right
