@@ -16,7 +16,19 @@ function formatTime(date) {
     return `${hours}:${minutes} ${ampm}`;
 }
 
-// Show timezone picker popup
+function getLocalTime(tz) {
+    const now = new Date();
+    const gmtMatch = tz.match(/^GMT([+-]\d{1,2})$/);
+    if (gmtMatch) {
+        const offset = parseInt(gmtMatch[1], 10);
+        const utc = now.getTime() + now.getTimezoneOffset()*60000;
+        return new Date(utc + offset*60*60*1000);
+    } else {
+        try { return new Date(now.toLocaleString("en-US", { timeZone: tz })); } 
+        catch { return now; }
+    }
+}
+
 function showTimezonePopup(id) {
     const oldPopup = document.getElementById("timezone-popup");
     if (oldPopup) oldPopup.remove();
@@ -28,33 +40,39 @@ function showTimezonePopup(id) {
     popup.style.left = "50%";
     popup.style.transform = "translate(-50%, -50%)";
     popup.style.background = "#2f3136";
-    popup.style.border = "1px solid #444";
     popup.style.borderRadius = "8px";
-    popup.style.padding = "10px";
+    popup.style.padding = "20px";
     popup.style.zIndex = "9999";
     popup.style.color = "#fff";
     popup.style.width = "220px";
     popup.style.maxHeight = "300px";
+    popup.style.display = "flex";
+    popup.style.flexDirection = "column";
+    popup.style.gap = "8px";
     popup.style.overflowY = "auto";
+    popup.style.paddingRight = "2px";
+    popup.style.scrollbarWidth = "thin";
+    popup.style.scrollbarColor = "rgba(101,102,113) transparent";
+    popup.style.fontFamily = "Whitney, Helvetica, Arial, sans-serif";
+    popup.style.fontSize = "14px";
 
-    const title = document.createElement("div");
+    const title = document.createElement("h3");
     title.innerText = "Select Timezone";
-    title.style.marginBottom = "8px";
     title.style.fontWeight = "bold";
+    title.style.fontSize = "16px";
+    title.style.marginBottom = "12px";
     popup.appendChild(title);
 
     commonTimezones.forEach(tz => {
         const btn = document.createElement("div");
+        btn.className = "timezone-option";
         btn.innerText = tz;
-        btn.style.padding = "6px";
+        btn.style.padding = "6px 12px";
         btn.style.cursor = "pointer";
-        btn.style.borderRadius = "4px";
-
-        btn.addEventListener("mouseenter", () => btn.style.background = "#40444b");
-        btn.addEventListener("mouseleave", () => btn.style.background = "transparent");
+        btn.style.borderRadius = "6px";
 
         btn.addEventListener("click", () => {
-            console.log("Setting timezone for ID:", id, "to", tz); // DEBUG
+            console.log("Setting timezone for ID:", id, "to", tz);
             localStorage.setItem(`timezone_${id}`, tz);
             popup.remove();
         });
@@ -63,63 +81,38 @@ function showTimezonePopup(id) {
     });
 
     document.body.appendChild(popup);
+
+    // Close popup on outside click
+    function closeOnClickOutside(event) {
+        if (!popup.contains(event.target)) {
+            popup.remove();
+            document.removeEventListener("mousedown", closeOnClickOutside);
+        }
+    }
+    document.addEventListener("mousedown", closeOnClickOutside);
 }
 
-// Update local time label
-function updateTimezoneLabel(label, id) {
-    const tz = localStorage.getItem(`timezone_${id}`);
-    if (!tz) {
-        label.innerText = "";
-        return;
-    }
-
-    const now = new Date();
-    let localTime;
-    try {
-        localTime = new Date(now.toLocaleString("en-US", { timeZone: tz }));
-    } catch {
-        localTime = now;
-    }
-
-    label.innerText = `Local Time: ${formatTime(localTime)} (${tz})`;
-}
-
-// Track the last hovered DM channel ID
+// Track last hovered DM channel ID
 let lastHoveredDMChannelId = null;
-
-// Listen for hover over DM links
 document.addEventListener("mouseover", e => {
     const dmLink = e.target.closest("a[href^='/channels/@me/']");
     if (dmLink) {
         const match = dmLink.getAttribute("href").match(/\/channels\/@me\/(\d+)/);
-        if (match) {
-            lastHoveredDMChannelId = match[1];
-            // console.log("Hovered DM channel ID:", lastHoveredDMChannelId); // optional debug
-        }
+        if (match) lastHoveredDMChannelId = match[1];
     }
 });
 
-// Track the element that was right-clicked
-let lastRightClickedElement = null;
-document.addEventListener("contextmenu", e => {
-    lastRightClickedElement = e.target.closest("[role='menuitem']");
-});
-
-// Try to get Discord user ID from React props
 function getReactUserId(element) {
     if (!element) return null;
     for (const key in element) {
         if (key.startsWith("__reactProps$")) {
             const props = element[key];
-            if (props && props.user && props.user.id) {
-                return props.user.id;
-            }
+            if (props && props.user && props.user.id) return props.user.id;
         }
     }
     return null;
 }
 
-// Generate fallback key from username + discriminator
 function getFallbackKey(menu) {
     const usernameDiv = menu.querySelector("h4, span");
     if (usernameDiv) {
@@ -131,64 +124,55 @@ function getFallbackKey(menu) {
     return "unknown_user";
 }
 
-// Inject Add Timezone option
 function injectIntoContextMenu(menu) {
     if (menu.querySelector("#add-timezone-option")) return;
 
-    let id = null;
-
-    // 1. Try React user ID first (server/friends)
     const anyMenuItem = menu.querySelector("div[role='menuitem']");
-    id = getReactUserId(anyMenuItem);
+    const id = getReactUserId(anyMenuItem) || lastHoveredDMChannelId || getFallbackKey(menu);
+    console.log("Opening menu for ID:", id);
 
-    // 2. Try last hovered DM channel ID
-    if (!id && lastHoveredDMChannelId) id = lastHoveredDMChannelId;
+    let listContainer = menu.querySelector("div[role='menuitem']")?.parentElement;
+    if (!listContainer) listContainer = menu;
 
-    // 3. Fallback
-    if (!id) id = getFallbackKey(menu);
-
-    console.log("Opening menu for ID:", id); // DEBUG
-
-    // Add Local Time label if saved
+    // Local Time label
     const savedTz = localStorage.getItem(`timezone_${id}`);
     if (savedTz) {
-        const now = new Date();
-        let localTime;
-        try {
-            localTime = new Date(now.toLocaleString("en-US", { timeZone: savedTz }));
-        } catch {
-            localTime = now;
-        }
+        const localTime = getLocalTime(savedTz);
 
         const tzLabel = document.createElement("div");
         tzLabel.innerText = `Local Time: ${formatTime(localTime)} (${savedTz})`;
-        tzLabel.style.padding = "6px 12px";
-        tzLabel.style.fontSize = "12px";
-        tzLabel.style.color = "#ccc";
+        tzLabel.setAttribute("role", "menuitem");
         tzLabel.style.pointerEvents = "none";
-        menu.insertBefore(tzLabel, menu.firstChild);
+        tzLabel.style.padding = "8px 12px";
+        tzLabel.style.color = "#ccc";
+        tzLabel.style.fontSize = "14px";
+        tzLabel.style.fontFamily = "Whitney, Helvetica, Arial, sans-serif";
+
+        listContainer.insertBefore(tzLabel, listContainer.firstChild);
     }
 
-    // Add "Add Timezone" button
+    // Add Timezone button
     const item = document.createElement("div");
     item.id = "add-timezone-option";
+    item.setAttribute("role", "menuitem");
     item.innerText = "Add Timezone";
     item.style.padding = "8px 12px";
     item.style.cursor = "pointer";
     item.style.userSelect = "none";
+    item.style.color = "#fff";
+    item.style.fontFamily = "Whitney, Helvetica, Arial, sans-serif";
+    item.style.fontSize = "14px";
+    item.style.borderRadius = "4px";
 
-    item.addEventListener("mouseenter", () => item.style.background = "#40444b");
+    // Keep hover effect only for Add Timezone button
+    item.addEventListener("mouseenter", () => item.style.background = "rgba(49,49,54)");
     item.addEventListener("mouseleave", () => item.style.background = "transparent");
-    item.addEventListener("click", () => {
-        console.log("Clicked Add Timezone for ID:", id); // DEBUG
-        showTimezonePopup(id);
-        document.body.click(); // close menu
-    });
 
-    menu.appendChild(item);
+    item.addEventListener("click", () => showTimezonePopup(id));
+
+    listContainer.insertBefore(item, listContainer.firstChild?.nextSibling || listContainer.firstChild);
 }
 
-// Observe menus
 const observer = new MutationObserver(() => {
     document.querySelectorAll("div[role='menu']").forEach(menu => injectIntoContextMenu(menu));
 });
