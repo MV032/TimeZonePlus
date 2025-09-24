@@ -19,5 +19,5 @@ How to use the extension
 
   Click the Add Timezone button at the top of the drop down menu.
 
-  To view their set timezone just right click their username again their local time 
+  To view their set timezone just right click their username again and their local time 
   will be formatted at the top of the drop down menu.
