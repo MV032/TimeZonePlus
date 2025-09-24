@@ -15,9 +15,9 @@ How to use the extension
 
   Right click a user who you want to add a timezone for.
   You can right click their username from the DM list or from one of their
-  chat in a DM, note it may not work if the message is from a group chat.
+  chats in a DM. Note it may not work if the message is sent from a group chat.
 
   Click the Add Timezone button at the top of the drop down menu.
 
-  To view their set timezone just right click them again their local time will
-  be formatted at the top of the drop down menu.
+  To view their set timezone just right click their username again their local time 
+  will be formatted at the top of the drop down menu.
